@@ -1,0 +1,2149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Cosecha y Despacho — BEGGIE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+:root{
+  --bg:#EAE3CE;
+  --paper:#F8F4E8;
+  --paper-line:#D9CFAF;
+  --ink:#2B2A1F;
+  --ink-soft:#5B5744;
+  --avocado-dark:#3F5233;
+  --avocado-mid:#6B8354;
+  --avocado-pale:#DCE4CB;
+  --skin-brown:#7A4B28;
+  --skin-pale:#EAD9C4;
+  --gold:#B4863B;
+  --gold-pale:#EFE1BF;
+  --danger:#8C3B2E;
+}
+
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Work Sans', sans-serif;
+  padding:0 0 60px;
+}
+
+.wrap{
+  max-width:780px;
+  margin:0 auto;
+  padding:28px 18px 0;
+}
+
+header.ledger-head{
+  border-bottom:3px solid var(--avocado-dark);
+  padding-bottom:16px;
+  margin-bottom:0;
+}
+header.ledger-head h1{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:clamp(24px, 6vw, 32px);
+  margin:0 0 4px;
+  color:var(--avocado-dark);
+  letter-spacing:-0.01em;
+}
+header.ledger-head .sub{
+  color:var(--ink-soft);
+  font-size:13.5px;
+}
+
+/* Tabs styled as ledger index tabs, not SaaS pills */
+.tabs{
+  display:flex;
+  margin-top:18px;
+  margin-bottom:26px;
+}
+.tab-btn{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:15px;
+  padding:10px 20px 9px;
+  background:var(--paper-line);
+  color:var(--ink-soft);
+  border:none;
+  cursor:pointer;
+  border-top:2px solid transparent;
+}
+.tab-btn.tab-cosecha.active{
+  background:var(--avocado-pale);
+  color:var(--avocado-dark);
+  border-top:2px solid var(--avocado-dark);
+}
+.tab-btn.tab-despacho.active{
+  background:var(--skin-pale);
+  color:var(--skin-brown);
+  border-top:2px solid var(--skin-brown);
+}
+.tab-btn.tab-stock.active{
+  background:var(--gold-pale);
+  color:#7A5A1E;
+  border-top:2px solid var(--gold);
+}
+.tab-btn + .tab-btn{margin-left:3px;}
+
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+.summary{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1px;
+  background:var(--paper-line);
+  border:1px solid var(--paper-line);
+  margin-bottom:26px;
+}
+.summary .cell{
+  background:var(--paper);
+  padding:14px 12px;
+  text-align:left;
+}
+.summary .cell .label{
+  font-size:11.5px;
+  color:var(--ink-soft);
+  margin-bottom:4px;
+}
+.summary .cell .value{
+  font-family:'IBM Plex Mono', monospace;
+  font-weight:600;
+  font-size:19px;
+  color:var(--avocado-dark);
+}
+.tab-panel.despacho .summary .cell .value{color:var(--skin-brown);}
+.tab-panel.stock .summary .cell .value{color:#7A5A1E;}
+.tab-panel.stock h2.section-title{color:#7A5A1E;}
+.tab-panel.stock thead th{border-bottom:2px solid var(--gold);}
+.stock-tabla tbody td.positivo{color:var(--avocado-dark);}
+.stock-tabla tbody td.negativo{color:var(--danger);}
+.stock-tabla thead th.th-ingreso{color:var(--avocado-dark);}
+.stock-tabla thead th.th-despacho{color:var(--skin-brown);}
+.stock-tabla tbody td.col-ingreso{color:var(--avocado-dark); font-weight:600; background:rgba(220,228,203,0.35);}
+.stock-tabla tbody td.col-despacho{color:var(--skin-brown); font-weight:600; background:rgba(234,217,196,0.35);}
+.tipo-badge{
+  display:inline-block;
+  padding:3px 9px;
+  font-size:11.5px;
+  font-weight:600;
+  white-space:nowrap;
+}
+.tipo-badge.cosecha{background:var(--avocado-pale); color:var(--avocado-dark);}
+.tipo-badge.despacho{background:var(--skin-pale); color:var(--skin-brown);}
+.stock-tabla tfoot td{
+  border-top:2px solid var(--gold);
+  border-bottom:none;
+  font-weight:600;
+  padding-top:11px;
+}
+
+section{margin-bottom:30px;}
+h2.section-title{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:19px;
+  color:var(--skin-brown);
+  margin:0 0 14px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--paper-line);
+}
+.tab-panel.cosecha h2.section-title{color:var(--skin-brown);}
+
+form{
+  background:var(--paper);
+  border:1px solid var(--paper-line);
+  padding:18px;
+}
+
+.field{margin-bottom:14px;}
+.field label{
+  display:block;
+  font-size:12.5px;
+  color:var(--ink-soft);
+  margin-bottom:5px;
+}
+.field select, .field input[type="date"], .field input[type="number"], .field input[type="text"]{
+  width:100%;
+  padding:10px 10px;
+  border:1px solid var(--paper-line);
+  background:#fff;
+  font-family:'Work Sans', sans-serif;
+  font-size:15px;
+  color:var(--ink);
+}
+.field select:focus, .field input:focus{
+  outline:2px solid var(--avocado-mid);
+  outline-offset:0;
+}
+.field input[readonly]{background:#F1EEE0; color:var(--ink-soft);}
+
+.row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+
+.envase-toggle{
+  display:flex;
+  gap:0;
+  border:1px solid var(--paper-line);
+}
+.envase-toggle button{
+  flex:1;
+  padding:10px;
+  background:#fff;
+  border:none;
+  border-right:1px solid var(--paper-line);
+  font-family:'Work Sans', sans-serif;
+  font-size:14px;
+  color:var(--ink-soft);
+  cursor:pointer;
+}
+.envase-toggle button:last-child{border-right:none;}
+.envase-toggle button.active{
+  background:var(--avocado-dark);
+  color:#fff;
+}
+.tab-panel.despacho .envase-toggle button.active{background:var(--skin-brown);}
+
+.stock-disponible{
+  background:#fff;
+  border:1px solid var(--gold);
+  padding:11px 14px;
+  margin-bottom:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+}
+.stock-disponible .txt{font-size:12.5px; color:var(--ink-soft);}
+.stock-disponible .num{
+  font-family:'IBM Plex Mono', monospace;
+  font-weight:700;
+  font-size:17px;
+  color:#7A5A1E;
+}
+.stock-disponible.excede{border-color:var(--danger);}
+.stock-disponible.excede .num{color:var(--danger);}
+
+.modulo-row{
+  background:#fff;
+  border:1px solid var(--paper-line);
+  padding:10px 10px 12px;
+  margin-bottom:8px;
+}
+.modulo-row-top{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin-bottom:8px;
+}
+.modulo-row-top select{
+  flex:1;
+  padding:9px 10px;
+  border:1px solid var(--paper-line);
+  background:#fff;
+  font-family:'Work Sans', sans-serif;
+  font-size:14.5px;
+  color:var(--ink);
+}
+.dm_remove{
+  background:none;
+  border:1px solid var(--danger);
+  color:var(--danger);
+  width:34px;
+  height:34px;
+  flex-shrink:0;
+  font-size:15px;
+  cursor:pointer;
+}
+.dm_remove:hover{background:var(--danger); color:#fff;}
+.dm_remove:disabled{opacity:0.35; cursor:not-allowed;}
+.modulo-row-bottom{
+  display:flex;
+  gap:8px;
+  align-items:stretch;
+}
+.envase-toggle.small{flex-shrink:0; width:150px;}
+.envase-toggle.small button{padding:9px 6px; font-size:12.5px;}
+.modulo-row-bottom input[type="number"]{
+  flex:1;
+  min-width:0;
+  padding:9px 10px;
+  border:1px solid var(--paper-line);
+  background:#fff;
+  font-family:'Work Sans', sans-serif;
+  font-size:14.5px;
+  color:var(--ink);
+}
+.dm_peso{
+  flex-shrink:0;
+  min-width:82px;
+  text-align:right;
+  align-self:center;
+  font-family:'IBM Plex Mono', monospace;
+  font-weight:600;
+  font-size:13.5px;
+  color:var(--skin-brown);
+}
+.modulo-row-fecha{
+  margin-bottom:8px;
+}
+.modulo-row-fecha label{
+  display:block;
+  font-size:11px;
+  color:var(--ink-soft);
+  margin-bottom:3px;
+}
+.modulo-row-fecha input[type="date"]{
+  width:100%;
+  padding:8px 9px;
+  border:1px solid var(--paper-line);
+  background:#fff;
+  font-family:'Work Sans', sans-serif;
+  font-size:13.5px;
+  color:var(--ink);
+}
+.dm_stockInfo{
+  margin-top:8px;
+  padding:7px 9px;
+  background:var(--gold-pale);
+  border:1px solid var(--gold);
+  font-size:12px;
+  color:#7A5A1E;
+  font-weight:600;
+}
+.modulo-row.row-excede .dm_stockInfo{
+  background:#F3DEDA;
+  border-color:var(--danger);
+  color:var(--danger);
+}
+.modulo-row.row-excede{border-color:var(--danger);}
+.add-modulo-btn{
+  width:100%;
+  padding:10px;
+  background:none;
+  border:1px dashed var(--skin-brown);
+  color:var(--skin-brown);
+  font-family:'Work Sans', sans-serif;
+  font-size:13.5px;
+  font-weight:600;
+  cursor:pointer;
+  margin-bottom:14px;
+}
+.add-modulo-btn:hover{background:var(--skin-pale);}
+.add-modulo-btn:disabled{opacity:0.4; cursor:not-allowed;}
+
+.preview-peso{
+  background:var(--avocado-pale);
+  padding:12px 14px;
+  margin-bottom:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+}
+.preview-peso .txt{font-size:13px; color:var(--avocado-dark);}
+.preview-peso .num{
+  font-family:'IBM Plex Mono', monospace;
+  font-weight:600;
+  font-size:20px;
+  color:var(--avocado-dark);
+}
+.tab-panel.despacho .preview-peso{background:var(--skin-pale);}
+.tab-panel.despacho .preview-peso .txt, .tab-panel.despacho .preview-peso .num{color:var(--skin-brown);}
+
+button.submit{
+  width:100%;
+  padding:13px;
+  background:var(--avocado-dark);
+  color:#fff;
+  border:none;
+  font-family:'Work Sans', sans-serif;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+}
+button.submit:hover{background:#334528;}
+button.submit:disabled{background:#a9ab9c; cursor:not-allowed;}
+.tab-panel.despacho button.submit{background:var(--skin-brown);}
+.tab-panel.despacho button.submit:hover{background:#603816;}
+
+.filters{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:8px;
+  margin-bottom:14px;
+}
+.filters select{
+  width:100%;
+  padding:8px;
+  border:1px solid var(--paper-line);
+  background:#fff;
+  font-size:13px;
+  color:var(--ink);
+}
+
+.table-wrap{
+  overflow-x:auto;
+  border:1px solid var(--paper-line);
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:560px;
+  background:var(--paper);
+}
+thead th{
+  text-align:left;
+  font-size:11.5px;
+  color:var(--ink-soft);
+  font-weight:600;
+  padding:10px 10px;
+  border-bottom:2px solid var(--avocado-dark);
+  white-space:nowrap;
+}
+.tab-panel.despacho thead th{border-bottom:2px solid var(--skin-brown);}
+tbody td{
+  padding:9px 10px;
+  border-bottom:1px solid var(--paper-line);
+  font-size:13.5px;
+  white-space:nowrap;
+}
+tbody td.num{
+  font-family:'IBM Plex Mono', monospace;
+  font-weight:500;
+}
+tbody tr:hover{background:#F1ECDC;}
+.del-btn{
+  background:none;
+  border:1px solid var(--danger);
+  color:var(--danger);
+  font-size:12px;
+  padding:4px 9px;
+  cursor:pointer;
+}
+.del-btn:hover{background:var(--danger); color:#fff;}
+
+.empty-state{
+  padding:26px 14px;
+  text-align:center;
+  color:var(--ink-soft);
+  font-size:14px;
+}
+
+.foot-actions{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:12px;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.export-btn{
+  background:none;
+  border:1px solid var(--skin-brown);
+  color:var(--skin-brown);
+  padding:8px 14px;
+  font-size:13px;
+  cursor:pointer;
+  font-family:'Work Sans', sans-serif;
+}
+.export-btn:hover{background:var(--skin-brown); color:#fff;}
+
+.note{
+  font-size:12px;
+  color:var(--ink-soft);
+}
+
+.status-msg{
+  font-size:13px;
+  padding:9px 12px;
+  margin-bottom:14px;
+  display:none;
+}
+.status-msg.show{display:block;}
+.status-msg.error{background:#F3DEDA; color:var(--danger); border:1px solid var(--danger);}
+.status-msg.ok{background:var(--avocado-pale); color:var(--avocado-dark); border:1px solid var(--avocado-mid);}
+
+.resumen-wa{
+  display:none;
+  background:var(--skin-pale);
+  border:1px solid var(--skin-brown);
+  padding:16px;
+  margin-bottom:26px;
+}
+.resumen-wa.show{display:block;}
+.resumen-wa .resumen-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.resumen-wa .resumen-head h3{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:15.5px;
+  color:var(--skin-brown);
+  margin:0;
+}
+.resumen-wa .btn-group{
+  display:flex;
+  gap:8px;
+}
+.resumen-wa .copy-btn, .resumen-wa .img-btn{
+  background:var(--skin-brown);
+  color:#fff;
+  border:none;
+  padding:8px 14px;
+  font-size:13px;
+  font-family:'Work Sans', sans-serif;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.resumen-wa .copy-btn:hover, .resumen-wa .img-btn:hover{background:#603816;}
+.resumen-wa .copy-btn.copied, .resumen-wa .img-btn.copied{background:var(--avocado-dark);}
+.resumen-wa pre{
+  background:#fff;
+  border:1px solid var(--paper-line);
+  padding:12px 14px;
+  margin:0;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:13px;
+  line-height:1.6;
+  color:var(--ink);
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+
+.stock-img-actions{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:26px;
+  background:var(--paper);
+  border:1px solid var(--paper-line);
+  padding:14px 16px;
+}
+.stock-img-actions .note{max-width:340px;}
+.stock-img-btn{
+  background:var(--gold);
+  color:#fff;
+  border:none;
+  padding:10px 16px;
+  font-size:13.5px;
+  font-family:'Work Sans', sans-serif;
+  font-weight:600;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.stock-img-btn:hover{background:#93712F;}
+
+.stock-preview-wrap{
+  background:var(--paper);
+  border:1px solid var(--gold);
+  padding:14px 16px 18px;
+  margin-bottom:26px;
+}
+.stock-preview-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:12px;
+}
+.stock-preview-head .note{max-width:340px;}
+.stock-preview-head select{
+  padding:9px 10px;
+  border:1px solid var(--paper-line);
+  background:#fff;
+  font-family:'Work Sans', sans-serif;
+  font-size:14px;
+  color:var(--ink);
+  min-width:160px;
+}
+.stock-preview-total{
+  font-family:'IBM Plex Mono', monospace;
+  font-weight:700;
+  font-size:15px;
+  color:#7A5A1E;
+  margin-bottom:10px;
+}
+.stock-preview-canvas-holder{
+  overflow-x:auto;
+  background:#EFE9D8;
+  border:1px solid var(--paper-line);
+  padding:10px;
+}
+.stock-preview-canvas-holder canvas.stock-preview-canvas{
+  display:block;
+  max-width:100%;
+  height:auto;
+}
+.stock-preview-canvas-holder .empty-state{padding:20px 10px;}
+
+.stock-modal-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(43,42,31,0.55);
+  z-index:100;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.stock-modal-overlay.show{display:flex;}
+.stock-modal{
+  background:var(--paper);
+  border:1px solid var(--gold);
+  max-width:360px;
+  width:100%;
+  padding:20px;
+}
+.stock-modal h3{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:16px;
+  color:#7A5A1E;
+  margin:0 0 4px;
+}
+.stock-modal .hint{
+  font-size:12.5px;
+  color:var(--ink-soft);
+  margin:0 0 14px;
+}
+.stock-modal-options{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-bottom:14px;
+}
+.stock-modal-btn{
+  text-align:left;
+  padding:11px 12px;
+  background:#fff;
+  border:1px solid var(--paper-line);
+  font-family:'Work Sans', sans-serif;
+  font-size:14px;
+  color:var(--ink);
+  cursor:pointer;
+}
+.stock-modal-btn:hover{background:var(--gold-pale); border-color:var(--gold);}
+.stock-modal-cancel{
+  width:100%;
+  padding:10px;
+  background:none;
+  border:1px solid var(--ink-soft);
+  color:var(--ink-soft);
+  font-family:'Work Sans', sans-serif;
+  font-size:13.5px;
+  cursor:pointer;
+}
+.stock-modal-cancel:hover{background:var(--paper-line);}
+
+@media (max-width:520px){
+  .summary{grid-template-columns:1fr;}
+  .filters{grid-template-columns:1fr;}
+  .row2{grid-template-columns:1fr;}
+  .tab-btn{padding:10px 14px 9px; font-size:13.5px;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="ledger-head">
+    <h1>BEGGIE</h1>
+    <div class="sub">Módulos 1 – 24 · Zutano, Piel Verde, Hass, Fruta con excreta</div>
+    <div class="tabs">
+      <button class="tab-btn tab-cosecha active" data-tab="cosecha">Cosecha</button>
+      <button class="tab-btn tab-despacho" data-tab="despacho">Despacho</button>
+      <button class="tab-btn tab-stock" data-tab="stock">Stock</button>
+    </div>
+  </header>
+
+  <div class="status-msg" id="statusMsg"></div>
+
+  <!-- ===================== PESTAÑA: COSECHA ===================== -->
+  <div class="tab-panel cosecha active" id="panel-cosecha">
+
+    <div class="summary">
+      <div class="cell">
+        <div class="label">Kilos hoy</div>
+        <div class="value" id="c_sumHoy">—</div>
+      </div>
+      <div class="cell">
+        <div class="label">Envases hoy</div>
+        <div class="value" id="c_sumEnvasesHoy">—</div>
+      </div>
+      <div class="cell">
+        <div class="label">Kilos totales</div>
+        <div class="value" id="c_sumTotal">—</div>
+      </div>
+    </div>
+
+    <section>
+      <h2 class="section-title">Nueva entrada</h2>
+      <form id="cosechaForm">
+        <div class="row2">
+          <div class="field">
+            <label for="c_fecha">Fecha</label>
+            <input type="date" id="c_fecha" required>
+          </div>
+          <div class="field">
+            <label for="c_modulo">Módulo</label>
+            <select id="c_modulo" required></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="c_variedad">Variedad / tipo de cosecha</label>
+          <select id="c_variedad" required>
+            <option value="ZUTANO">Zutano</option>
+            <option value="PIEL VERDE">Piel Verde</option>
+            <option value="HASS">Hass</option>
+            <option value="FRUTA CON EXCRETA">Fruta con excreta</option>
+            <option value="OTRO">Otro…</option>
+          </select>
+        </div>
+        <div class="field" id="c_variedadOtroField" style="display:none;">
+          <label for="c_variedadOtro">Especificar variedad</label>
+          <input type="text" id="c_variedadOtro" placeholder="Nombre de la variedad">
+        </div>
+
+        <div class="field">
+          <label for="c_acopio">Acopio donde se acumula la fruta</label>
+          <select id="c_acopio" required>
+            <option value="ACOPIO 1">Acopio 1</option>
+            <option value="ACOPIO 2">Acopio 2</option>
+            <option value="OTRO">Otro…</option>
+          </select>
+        </div>
+        <div class="field" id="c_acopioOtroField" style="display:none;">
+          <label for="c_acopioOtro">Especificar acopio</label>
+          <input type="text" id="c_acopioOtro" placeholder="Nombre del acopio">
+        </div>
+
+        <div class="field">
+          <label>Tipo de envase</label>
+          <div class="envase-toggle" id="c_envaseToggle">
+            <button type="button" data-envase="jaba" class="active">Jaba (19 kg)</button>
+            <button type="button" data-envase="bin">Bin (430 kg)</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="c_cantidad">Cantidad de envases</label>
+          <input type="number" id="c_cantidad" min="1" step="1" placeholder="Ej: 25" required>
+        </div>
+
+        <div class="preview-peso">
+          <span class="txt">Peso a registrar</span>
+          <span class="num" id="c_pesoPreview">0 kg</span>
+        </div>
+
+        <button type="submit" class="submit" id="c_submitBtn">Registrar cosecha</button>
+      </form>
+    </section>
+
+    <section>
+      <h2 class="section-title">Cosechas registradas</h2>
+
+      <div class="filters">
+        <select id="c_filtroFecha"><option value="">Todas las fechas</option></select>
+        <select id="c_filtroModulo"><option value="">Todos los módulos</option></select>
+        <select id="c_filtroVariedad"><option value="">Todas las variedades</option></select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th><th>Módulo</th><th>Acopio</th><th>Variedad</th><th>Envase</th>
+              <th>Cant.</th><th>Peso (kg)</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="c_tablaBody"></tbody>
+        </table>
+        <div class="empty-state" id="c_emptyState" style="display:none;">
+          Aún no hay cosechas registradas. Completa el formulario de arriba para empezar.
+        </div>
+      </div>
+
+      <div class="foot-actions">
+        <span class="note">Bin = 430 kg · Jaba = 19 kg</span>
+        <button class="export-btn" id="c_exportBtn">Descargar CSV</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===================== PESTAÑA: DESPACHO ===================== -->
+  <div class="tab-panel despacho" id="panel-despacho">
+
+    <div class="summary">
+      <div class="cell">
+        <div class="label">Kilos despachados hoy</div>
+        <div class="value" id="d_sumHoy">—</div>
+      </div>
+      <div class="cell">
+        <div class="label">Viajes hoy</div>
+        <div class="value" id="d_sumViajesHoy">—</div>
+      </div>
+      <div class="cell">
+        <div class="label">Kilos despachados totales</div>
+        <div class="value" id="d_sumTotal">—</div>
+      </div>
+    </div>
+
+    <section>
+      <h2 class="section-title">Nuevo despacho</h2>
+      <form id="despachoForm">
+        <div class="row2">
+          <div class="field">
+            <label for="d_fecha">Fecha de despacho</label>
+            <input type="date" id="d_fecha" required>
+          </div>
+          <div class="field">
+            <label for="d_viaje">N° de viaje</label>
+            <input type="text" id="d_viaje" placeholder="Ej: 001" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="d_cliente">Cliente</label>
+          <input type="text" id="d_cliente" placeholder="Nombre del cliente" required>
+        </div>
+
+        <div class="field">
+          <label for="d_placa">Placa de la unidad de transporte</label>
+          <input type="text" id="d_placa" placeholder="Ej: ABC-123" style="text-transform:uppercase;" required>
+        </div>
+
+        <div class="field">
+          <label for="d_calidad">Calidad</label>
+          <input type="text" id="d_calidad" list="d_calidadList" placeholder="Ej: Primera" required>
+          <datalist id="d_calidadList">
+            <option value="Primera">
+            <option value="Segunda">
+            <option value="Tercera">
+            <option value="Descarte">
+          </datalist>
+        </div>
+
+        <div class="field">
+          <label for="d_variedad">Variedad</label>
+          <select id="d_variedad" required>
+            <option value="ZUTANO">Zutano</option>
+            <option value="PIEL VERDE">Piel Verde</option>
+            <option value="HASS">Hass</option>
+            <option value="FRUTA CON EXCRETA">Fruta con excreta</option>
+            <option value="OTRO">Otro…</option>
+          </select>
+        </div>
+        <div class="field" id="d_variedadOtroField" style="display:none;">
+          <label for="d_variedadOtro">Especificar variedad</label>
+          <input type="text" id="d_variedadOtro" placeholder="Nombre de la variedad">
+        </div>
+
+        <div class="stock-disponible" id="d_stockDisponible">
+          <span class="txt">Stock disponible de esta variedad (todos los módulos)</span>
+          <span class="num" id="d_stockDisponibleNum">0 kg</span>
+        </div>
+
+        <div class="field">
+          <label>Módulos a despachar</label>
+          <p class="note" style="margin:-4px 0 10px;">Cada módulo puede tener su propia fecha de cosecha. Al elegir el módulo verás su stock disponible.</p>
+          <div id="d_modulosLista"></div>
+          <button type="button" class="add-modulo-btn" id="d_addModuloBtn">+ Agregar módulo</button>
+        </div>
+
+        <div class="preview-peso">
+          <span class="txt">Peso total a despachar</span>
+          <span class="num" id="d_pesoPreview">0 kg</span>
+        </div>
+
+        <button type="submit" class="submit" id="d_submitBtn">Registrar despacho</button>
+      </form>
+    </section>
+
+    <div class="resumen-wa" id="d_resumenWa">
+      <div class="resumen-head">
+        <h3>Resumen para WhatsApp</h3>
+        <div class="btn-group">
+          <button type="button" class="copy-btn" id="d_copyBtn">Copiar texto</button>
+          <button type="button" class="img-btn" id="d_imgBtn">Compartir imagen</button>
+        </div>
+      </div>
+      <pre id="d_resumenTexto"></pre>
+    </div>
+
+    <section>
+      <h2 class="section-title">Despachos registrados</h2>
+
+      <div class="filters">
+        <select id="d_filtroFecha"><option value="">Todas las fechas</option></select>
+        <select id="d_filtroCliente"><option value="">Todos los clientes</option></select>
+        <select id="d_filtroVariedad"><option value="">Todas las variedades</option></select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th><th>Viaje</th><th>Placa</th><th>Cliente</th><th>Calidad</th>
+              <th>Variedad</th><th>Módulo</th><th>Envase</th><th>Cant.</th>
+              <th>Peso (kg)</th><th>F. cosecha</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="d_tablaBody"></tbody>
+        </table>
+        <div class="empty-state" id="d_emptyState" style="display:none;">
+          Aún no hay despachos registrados. Completa el formulario de arriba para empezar.
+        </div>
+      </div>
+
+      <div class="foot-actions">
+        <span class="note">Bin = 430 kg · Jaba = 19 kg</span>
+        <button class="export-btn" id="d_exportBtn">Descargar CSV</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===================== PESTAÑA: STOCK ===================== -->
+  <div class="tab-panel stock" id="panel-stock">
+
+    <div class="summary">
+      <div class="cell">
+        <div class="label">Cosechado total</div>
+        <div class="value" id="s_sumCosechado">—</div>
+      </div>
+      <div class="cell">
+        <div class="label">Despachado total</div>
+        <div class="value" id="s_sumDespachado">—</div>
+      </div>
+      <div class="cell">
+        <div class="label">Stock actual</div>
+        <div class="value" id="s_sumStock">—</div>
+      </div>
+    </div>
+
+    <div class="stock-img-actions">
+      <span class="note">Genera una imagen del acumulado por variedad, lista para compartir por WhatsApp.</span>
+      <button type="button" class="stock-img-btn" id="s_imgStockBtn">Compartir stock (imagen)</button>
+    </div>
+
+    <div class="stock-preview-wrap">
+      <div class="stock-preview-head">
+        <span class="note">Vista previa en vivo: así se ve la imagen que genera el botón de arriba, con el stock real ya descontado por módulo y fecha de cosecha. No necesitas presionar "Compartir" para verla; úsalo solo cuando quieras enviarla por WhatsApp.</span>
+        <select id="s_previewVariedad"></select>
+      </div>
+      <div class="stock-preview-total" id="s_previewTotal"></div>
+      <div class="stock-preview-canvas-holder" id="s_previewCanvasHolder">
+        <div class="empty-state" id="s_previewEmpty">Aún no hay cosechas registradas para mostrar el stock.</div>
+      </div>
+    </div>
+
+    <section>
+      <h2 class="section-title">Stock por variedad</h2>
+      <div class="table-wrap">
+        <table class="stock-tabla">
+          <thead>
+            <tr>
+              <th>Variedad</th><th class="th-ingreso">🟢 Cosechado / ingreso (kg)</th><th class="th-despacho">🟤 Despachado / egreso (kg)</th><th>Stock actual (kg)</th>
+            </tr>
+          </thead>
+          <tbody id="s_resumenBody"></tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              <td class="num" id="s_totCosechado">0</td>
+              <td class="num" id="s_totDespachado">0</td>
+              <td class="num" id="s_totStock">0</td>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="empty-state" id="s_emptyResumen" style="display:none;">
+          Aún no hay movimientos de cosecha ni despacho.
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Movimientos (cosecha y despacho)</h2>
+
+      <div class="filters">
+        <select id="s_filtroVariedad"><option value="">Todas las variedades</option></select>
+        <select id="s_filtroFecha"><option value="">Todas las fechas</option></select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th><th>Tipo</th><th>Variedad</th><th>Detalle</th>
+              <th>Movimiento (kg)</th><th>Saldo (kg)</th>
+            </tr>
+          </thead>
+          <tbody id="s_ledgerBody"></tbody>
+        </table>
+        <div class="empty-state" id="s_emptyLedger" style="display:none;">
+          Sin movimientos para el filtro seleccionado.
+        </div>
+      </div>
+
+      <div class="foot-actions">
+        <span class="note">🟢 Cosecha suma al stock · 🟤 Despacho lo descuenta automáticamente · orden cronológico por fecha</span>
+        <button class="export-btn" id="s_exportBtn">Descargar CSV</button>
+      </div>
+    </section>
+  </div>
+
+</div>
+
+<div class="stock-modal-overlay" id="s_modalOverlay">
+  <div class="stock-modal">
+    <h3>¿De qué variedad necesitas el stock?</h3>
+    <p class="hint">Se generará una imagen con el acumulado de cosecha de la variedad elegida.</p>
+    <div class="stock-modal-options" id="s_modalOpciones"></div>
+    <button type="button" class="stock-modal-cancel" id="s_modalCancelar">Cancelar</button>
+  </div>
+</div>
+
+<script>
+const PESO = { jaba: 19, bin: 430 };
+const FUNDO_NOMBRE = 'BEGGIE';
+const $ = (id) => document.getElementById(id);
+
+/* ---------- Sincronización con Google Sheets / Drive ---------- */
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxe97ZaOe23vzqD4BmeCI5pKSzhglo2vAQn3UimCwNorX9NCTsvWE-jzsCINorR9DFK/exec';
+
+async function enviarAGoogleSheets(tipo, datos){
+  try{
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors', // Apps Script no responde con headers CORS; no-cors evita el bloqueo del navegador
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ fundo: FUNDO_NOMBRE, tipo, datos, timestamp: new Date().toISOString() })
+    });
+  }catch(e){
+    console.warn('No se pudo sincronizar con Google Sheets/Drive:', e);
+  }
+}
+
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+function formatFechaDisplay(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function showStatus(msg, type){
+  const el = $('statusMsg');
+  el.textContent = msg;
+  el.className = 'status-msg show ' + type;
+  setTimeout(()=>{ el.className = 'status-msg'; }, type === 'error' ? 7000 : 3500);
+}
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    $('panel-' + btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab === 'stock'){ renderStock(); }
+  });
+});
+
+function fillModuloSelect(sel){
+  for(let i=1;i<=24;i++){
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = 'Módulo ' + i;
+    sel.appendChild(opt);
+  }
+}
+fillModuloSelect($('c_modulo'));
+
+/* =========================================================
+   COSECHA
+   ========================================================= */
+const COSECHA_KEY = 'cosechas-beggie';
+let cosechas = [];
+let c_envaseActual = 'jaba';
+
+async function loadCosechas(){
+  try{
+    const raw = localStorage.getItem(COSECHA_KEY);
+    cosechas = raw ? JSON.parse(raw) : [];
+  }catch(e){ cosechas = []; }
+  renderCosecha();
+}
+async function saveCosechas(){
+  try{
+    localStorage.setItem(COSECHA_KEY, JSON.stringify(cosechas));
+    return true;
+  }catch(e){ showStatus('Error al guardar: ' + e.message, 'error'); return false; }
+}
+
+function updateCosechaPreview(){
+  const cantidad = parseInt($('c_cantidad').value) || 0;
+  $('c_pesoPreview').textContent = (cantidad * PESO[c_envaseActual]).toLocaleString('es-PE') + ' kg';
+}
+$('c_variedad').addEventListener('change', ()=>{
+  $('c_variedadOtroField').style.display = $('c_variedad').value === 'OTRO' ? 'block' : 'none';
+});
+$('c_acopio').addEventListener('change', ()=>{
+  $('c_acopioOtroField').style.display = $('c_acopio').value === 'OTRO' ? 'block' : 'none';
+});
+$('c_envaseToggle').querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    $('c_envaseToggle').querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    c_envaseActual = btn.dataset.envase;
+    updateCosechaPreview();
+  });
+});
+$('c_cantidad').addEventListener('input', updateCosechaPreview);
+
+$('cosechaForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const fecha = $('c_fecha').value;
+  const modulo = $('c_modulo').value;
+  const variedad = $('c_variedad').value === 'OTRO' ? ($('c_variedadOtro').value||'').trim().toUpperCase() : $('c_variedad').value;
+  const acopio = $('c_acopio').value === 'OTRO' ? ($('c_acopioOtro').value||'').trim().toUpperCase() : $('c_acopio').value;
+  const cantidad = parseInt($('c_cantidad').value);
+
+  if(!fecha || !modulo || !variedad || !acopio || !cantidad || cantidad < 1){
+    showStatus('Completa todos los campos antes de registrar.', 'error');
+    return;
+  }
+  const btn = $('c_submitBtn');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+
+  const registro = {
+    id: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    fecha, modulo: parseInt(modulo), variedad, acopio,
+    envase: c_envaseActual, cantidad, peso: cantidad*PESO[c_envaseActual]
+  };
+  cosechas.push(registro);
+  const ok = await saveCosechas();
+
+  btn.disabled = false; btn.textContent = 'Registrar cosecha';
+  if(ok){
+    showStatus('Cosecha registrada correctamente.', 'ok');
+    enviarAGoogleSheets('cosecha', registro);
+    $('c_cantidad').value = '';
+    updateCosechaPreview();
+    renderCosecha();
+    renderStock();
+  }else{
+    cosechas.pop();
+  }
+});
+
+async function eliminarCosecha(id){
+  cosechas = cosechas.filter(r=>r.id!==id);
+  await saveCosechas();
+  renderCosecha();
+  renderStock();
+}
+
+function poblarFiltrosCosecha(){
+  const fechas = [...new Set(cosechas.map(r=>r.fecha))].sort().reverse();
+  const modulos = [...new Set(cosechas.map(r=>r.modulo))].sort((a,b)=>a-b);
+  const variedades = [...new Set(cosechas.map(r=>r.variedad))].sort();
+  const fF=$('c_filtroFecha'), fM=$('c_filtroModulo'), fV=$('c_filtroVariedad');
+  const curF=fF.value, curM=fM.value, curV=fV.value;
+  fF.innerHTML = '<option value="">Todas las fechas</option>'+fechas.map(f=>`<option value="${f}">${f}</option>`).join('');
+  fM.innerHTML = '<option value="">Todos los módulos</option>'+modulos.map(m=>`<option value="${m}">Módulo ${m}</option>`).join('');
+  fV.innerHTML = '<option value="">Todas las variedades</option>'+variedades.map(v=>`<option value="${v}">${v}</option>`).join('');
+  fF.value=curF; fM.value=curM; fV.value=curV;
+}
+
+function renderTablaCosecha(){
+  const fF=$('c_filtroFecha').value, fM=$('c_filtroModulo').value, fV=$('c_filtroVariedad').value;
+  let filtrados = cosechas.filter(r=> (!fF||r.fecha===fF) && (!fM||r.modulo===parseInt(fM)) && (!fV||r.variedad===fV));
+  filtrados.sort((a,b)=> b.fecha.localeCompare(a.fecha) || b.id.localeCompare(a.id));
+  const tbody = $('c_tablaBody');
+  tbody.innerHTML = '';
+  $('c_emptyState').style.display = filtrados.length===0 ? 'block':'none';
+  filtrados.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.fecha}</td><td>Mod. ${r.modulo}</td><td>${r.acopio||'—'}</td><td>${r.variedad}</td>
+      <td>${r.envase==='jaba'?'Jaba':'Bin'}</td><td class="num">${r.cantidad}</td>
+      <td class="num">${r.peso.toLocaleString('es-PE')}</td>
+      <td><button class="del-btn" data-id="${r.id}">Eliminar</button></td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('.del-btn').forEach(b=> b.addEventListener('click', ()=>eliminarCosecha(b.dataset.id)));
+}
+
+function renderResumenCosecha(){
+  const hoy = todayISO();
+  const deHoy = cosechas.filter(r=>r.fecha===hoy);
+  $('c_sumHoy').textContent = deHoy.reduce((s,r)=>s+r.peso,0).toLocaleString('es-PE')+' kg';
+  $('c_sumEnvasesHoy').textContent = deHoy.reduce((s,r)=>s+r.cantidad,0).toLocaleString('es-PE');
+  $('c_sumTotal').textContent = cosechas.reduce((s,r)=>s+r.peso,0).toLocaleString('es-PE')+' kg';
+}
+
+function renderCosecha(){
+  poblarFiltrosCosecha();
+  renderTablaCosecha();
+  renderResumenCosecha();
+}
+
+['c_filtroFecha','c_filtroModulo','c_filtroVariedad'].forEach(id=> $(id).addEventListener('change', renderTablaCosecha));
+
+$('c_exportBtn').addEventListener('click', ()=>{
+  if(cosechas.length===0){ showStatus('No hay cosechas para exportar.','error'); return; }
+  const header = 'Fecha,Modulo,Acopio,Variedad,Envase,Cantidad,Peso(kg)\n';
+  const rows = [...cosechas].sort((a,b)=>a.fecha.localeCompare(b.fecha))
+    .map(r=>`${r.fecha},${r.modulo},"${r.acopio||''}","${r.variedad}",${r.envase},${r.cantidad},${r.peso}`).join('\n');
+  descargarCSV(header+rows, 'cosechas_beggie.csv');
+});
+
+/* =========================================================
+   DESPACHO
+   ========================================================= */
+const DESPACHO_KEY = 'despachos-beggie';
+let despachos = [];
+let d_filaSeq = 0;
+
+async function loadDespachos(){
+  try{
+    const raw = localStorage.getItem(DESPACHO_KEY);
+    despachos = raw ? JSON.parse(raw) : [];
+  }catch(e){ despachos = []; }
+  renderDespacho();
+}
+async function saveDespachos(){
+  try{
+    localStorage.setItem(DESPACHO_KEY, JSON.stringify(despachos));
+    return true;
+  }catch(e){ showStatus('Error al guardar: ' + e.message, 'error'); return false; }
+}
+
+/* ---------- Stock por módulo + variedad (kg y envases) ---------- */
+function stockPorModuloVariedad(variedad, modulo){
+  let cJaba=0, cBin=0, dJaba=0, dBin=0;
+  cosechas.forEach(r=>{
+    if(r.variedad===variedad && r.modulo===modulo){
+      if(r.envase==='jaba') cJaba+=r.cantidad; else cBin+=r.cantidad;
+    }
+  });
+  despachos.forEach(r=>{
+    if(r.variedad===variedad && r.modulo===modulo){
+      if(r.envase==='jaba') dJaba+=r.cantidad; else dBin+=r.cantidad;
+    }
+  });
+  const stockJaba = cJaba - dJaba, stockBin = cBin - dBin;
+  return {
+    stockJaba, stockBin,
+    stockKg: stockJaba*PESO.jaba + stockBin*PESO.bin,
+    cosechadoJaba:cJaba, cosechadoBin:cBin
+  };
+}
+
+function textoStockModulo(variedad, modulo, envaseDespacho){
+  if(!modulo) return 'Elige un módulo para ver su stock.';
+  const s = stockPorModuloVariedad(variedad, modulo);
+  if(s.stockKg <= 0){
+    return `Stock Mod. ${modulo} (${variedad}): 0 kg disponibles`;
+  }
+  // Se convierte el stock (sin importar en qué envase se cosechó) al envase que se está despachando.
+  const equivalente = Math.floor(s.stockKg / PESO[envaseDespacho]);
+  const envaseTxt = envaseDespacho === 'jaba' ? 'jabas' : 'bines';
+  const detalleOrigen = [];
+  if(s.stockBin !== 0 || s.cosechadoBin > 0) detalleOrigen.push(s.stockBin.toLocaleString('es-PE') + ' bines cosechados');
+  if(s.stockJaba !== 0 || s.cosechadoJaba > 0) detalleOrigen.push(s.stockJaba.toLocaleString('es-PE') + ' jabas cosechadas');
+  return `Stock Mod. ${modulo} (${variedad}): ${s.stockKg.toLocaleString('es-PE')} kg disponibles (≈ ${equivalente.toLocaleString('es-PE')} ${envaseTxt})${detalleOrigen.length ? ' · ' + detalleOrigen.join(' · ') : ''}`;
+}
+
+/* ---------- Filas dinámicas de módulos a despachar ---------- */
+function crearFilaModulo(){
+  d_filaSeq++;
+  const row = document.createElement('div');
+  row.className = 'modulo-row';
+  row.dataset.rowId = d_filaSeq;
+
+  const top = document.createElement('div');
+  top.className = 'modulo-row-top';
+  const sel = document.createElement('select');
+  sel.className = 'dm_modulo';
+  for(let i=1;i<=24;i++){
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = 'Módulo ' + i;
+    sel.appendChild(opt);
+  }
+  const rm = document.createElement('button');
+  rm.type = 'button'; rm.className = 'dm_remove'; rm.textContent = '✕'; rm.title = 'Quitar este módulo';
+  top.appendChild(sel); top.appendChild(rm);
+
+  const fechaWrap = document.createElement('div');
+  fechaWrap.className = 'modulo-row-fecha';
+  const fechaLabel = document.createElement('label');
+  fechaLabel.textContent = 'Fecha de cosecha de este módulo';
+  const fechaInput = document.createElement('input');
+  fechaInput.type = 'date'; fechaInput.className = 'dm_fechaCosecha'; fechaInput.value = todayISO();
+  fechaWrap.appendChild(fechaLabel); fechaWrap.appendChild(fechaInput);
+
+  const bottom = document.createElement('div');
+  bottom.className = 'modulo-row-bottom';
+  const toggle = document.createElement('div');
+  toggle.className = 'envase-toggle small dm_envase';
+  toggle.dataset.envase = 'jaba';
+  const bJaba = document.createElement('button');
+  bJaba.type='button'; bJaba.dataset.envase='jaba'; bJaba.className='active'; bJaba.textContent='Jaba';
+  const bBin = document.createElement('button');
+  bBin.type='button'; bBin.dataset.envase='bin'; bBin.textContent='Bin';
+  toggle.appendChild(bJaba); toggle.appendChild(bBin);
+
+  const cant = document.createElement('input');
+  cant.type='number'; cant.min='1'; cant.step='1'; cant.className='dm_cantidad'; cant.placeholder='Cantidad';
+
+  const peso = document.createElement('span');
+  peso.className = 'dm_peso'; peso.textContent = '0 kg';
+
+  bottom.appendChild(toggle); bottom.appendChild(cant); bottom.appendChild(peso);
+
+  const stockInfo = document.createElement('div');
+  stockInfo.className = 'dm_stockInfo';
+  stockInfo.textContent = textoStockModulo(variedadSeleccionadaDespacho(), 1, 'jaba');
+
+  row.appendChild(top); row.appendChild(fechaWrap); row.appendChild(bottom); row.appendChild(stockInfo);
+
+  toggle.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      toggle.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      toggle.dataset.envase = b.dataset.envase;
+      updateDespachoPreview();
+    });
+  });
+  cant.addEventListener('input', updateDespachoPreview);
+  sel.addEventListener('change', updateDespachoPreview);
+  fechaInput.addEventListener('change', updateDespachoPreview);
+  rm.addEventListener('click', ()=>{
+    if($('d_modulosLista').children.length <= 1) return;
+    row.remove();
+    actualizarBotonAgregar();
+    updateDespachoPreview();
+  });
+
+  return row;
+}
+
+function agregarFilaModulo(){
+  if($('d_modulosLista').children.length >= 6) return;
+  $('d_modulosLista').appendChild(crearFilaModulo());
+  actualizarBotonAgregar();
+  updateDespachoPreview();
+}
+function actualizarBotonAgregar(){
+  const n = $('d_modulosLista').children.length;
+  $('d_addModuloBtn').disabled = n >= 6;
+  $('d_addModuloBtn').textContent = n >= 6 ? 'Máximo 6 módulos por despacho' : '+ Agregar módulo';
+  $('d_modulosLista').querySelectorAll('.dm_remove').forEach(b=> b.disabled = n <= 1);
+}
+$('d_addModuloBtn').addEventListener('click', agregarFilaModulo);
+agregarFilaModulo(); // primera fila al cargar
+
+function leerFilasModulo(){
+  const variedad = variedadSeleccionadaDespacho();
+  return [...$('d_modulosLista').querySelectorAll('.modulo-row')].map(row=>{
+    const modulo = parseInt(row.querySelector('.dm_modulo').value);
+    const envase = row.querySelector('.dm_envase').dataset.envase;
+    const cantidad = parseInt(row.querySelector('.dm_cantidad').value) || 0;
+    const fechaCosecha = row.querySelector('.dm_fechaCosecha').value;
+    const peso = cantidad * PESO[envase];
+    row.querySelector('.dm_peso').textContent = peso.toLocaleString('es-PE') + ' kg';
+
+    // El stock se compara en KILOS, sin importar si se cosechó en bin y se despacha en jaba (o viceversa).
+    const s = stockPorModuloVariedad(variedad, modulo);
+    row.querySelector('.dm_stockInfo').textContent = textoStockModulo(variedad, modulo, envase);
+    const excede = peso > 0 && peso > s.stockKg;
+    row.classList.toggle('row-excede', excede);
+
+    return {modulo, envase, cantidad, peso, fechaCosecha, stockKg: s.stockKg, excede};
+  });
+}
+
+function variedadSeleccionadaDespacho(){
+  return $('d_variedad').value === 'OTRO' ? ($('d_variedadOtro').value||'').trim().toUpperCase() : $('d_variedad').value;
+}
+
+function updateDespachoPreview(){
+  const filas = leerFilasModulo();
+  const total = filas.reduce((s,f)=>s+f.peso, 0);
+  $('d_pesoPreview').textContent = total.toLocaleString('es-PE') + ' kg';
+
+  const variedad = variedadSeleccionadaDespacho();
+  const disponible = calcularStockPorVariedad().find(v=>v.variedad===variedad);
+  const stockDisp = disponible ? disponible.stock : 0;
+  $('d_stockDisponibleNum').textContent = stockDisp.toLocaleString('es-PE') + ' kg';
+  $('d_stockDisponible').classList.toggle('excede', total > 0 && total > stockDisp);
+}
+
+$('d_variedad').addEventListener('change', ()=>{
+  $('d_variedadOtroField').style.display = $('d_variedad').value === 'OTRO' ? 'block' : 'none';
+  updateDespachoPreview();
+});
+$('d_variedadOtro').addEventListener('input', updateDespachoPreview);
+
+$('despachoForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const fecha = $('d_fecha').value;
+  const viaje = $('d_viaje').value.trim();
+  const placa = $('d_placa').value.trim().toUpperCase();
+  const cliente = $('d_cliente').value.trim();
+  const calidad = $('d_calidad').value.trim();
+  const variedad = variedadSeleccionadaDespacho();
+  const filas = leerFilasModulo();
+
+  if(!fecha || !viaje || !placa || !cliente || !calidad || !variedad){
+    showStatus('Completa todos los campos antes de registrar el despacho.', 'error');
+    return;
+  }
+  if(filas.some(f=>!f.modulo || !f.cantidad || f.cantidad < 1 || !f.fechaCosecha)){
+    showStatus('Completa el módulo, la fecha de cosecha y la cantidad en cada fila.', 'error');
+    return;
+  }
+  const filaExcedida = filas.find(f=>f.excede);
+  if(filaExcedida){
+    const pesoSolicitado = filaExcedida.peso.toLocaleString('es-PE');
+    const envaseTxt = filaExcedida.envase === 'jaba' ? 'jabas' : 'bines';
+    const stockKgTxt = filaExcedida.stockKg.toLocaleString('es-PE');
+    showStatus(`⚠️ Kilos fuera de tu stock — Mod. ${filaExcedida.modulo}: intentas despachar ${filaExcedida.cantidad} ${envaseTxt} (${pesoSolicitado} kg), pero ese módulo solo tiene ${stockKgTxt} kg disponibles de ${variedad}.`, 'error');
+    return;
+  }
+  const pesoTotal = filas.reduce((s,f)=>s+f.peso, 0);
+  const disponible = calcularStockPorVariedad().find(v=>v.variedad===variedad);
+  const stockDisp = disponible ? disponible.stock : 0;
+  if(pesoTotal > stockDisp){
+    showStatus(`⚠️ Kilos fuera de tu stock de ${variedad}: disponible ${stockDisp.toLocaleString('es-PE')} kg, solicitado ${pesoTotal.toLocaleString('es-PE')} kg.`, 'error');
+    return;
+  }
+
+  const btn = $('d_submitBtn');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+
+  const grupoId = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const nuevos = filas.map(f=>({
+    id: Date.now().toString(36)+Math.random().toString(36).slice(2,6)+f.modulo,
+    grupoId, fecha, viaje, placa, cliente, calidad, variedad,
+    modulo: f.modulo, envase: f.envase, cantidad: f.cantidad, peso: f.peso,
+    fechaCosecha: f.fechaCosecha
+  }));
+  despachos.push(...nuevos);
+  const ok = await saveDespachos();
+
+  btn.disabled = false; btn.textContent = 'Registrar despacho';
+  if(ok){
+    showStatus('Despacho registrado correctamente.', 'ok');
+    enviarAGoogleSheets('despacho', { grupoId, fecha, viaje, placa, cliente, calidad, variedad, modulos: nuevos, pesoTotal });
+    mostrarResumenWa({fecha, viaje, placa, cliente, calidad, variedad, modulos: nuevos, pesoTotal});
+    $('d_viaje').value=''; $('d_placa').value=''; $('d_cliente').value=''; $('d_calidad').value='';
+    $('d_modulosLista').innerHTML=''; agregarFilaModulo();
+    updateDespachoPreview();
+    renderDespacho();
+    renderStock();
+  }else{
+    despachos.splice(despachos.length - nuevos.length, nuevos.length);
+  }
+});
+
+let d_ultimoDespacho = null;
+
+function mostrarResumenWa(r){
+  d_ultimoDespacho = r;
+  const lineasModulos = r.modulos.map(m=>
+    `• Mod. ${m.modulo} — ${m.envase==='jaba'?'Jaba':'Bin'} x${m.cantidad} = ${m.peso.toLocaleString('es-PE')} kg (cosecha ${formatFechaDisplay(m.fechaCosecha)})`
+  ).join('\n');
+
+  const texto =
+`🥑 *DESPACHO DE PALTA — ${FUNDO_NOMBRE}*
+📅 Fecha: ${formatFechaDisplay(r.fecha)}
+🚚 N° viaje: ${r.viaje}
+🚛 Placa: ${r.placa}
+👤 Cliente: ${r.cliente}
+✅ Calidad: ${r.calidad}
+🌱 Variedad: ${r.variedad}
+
+📦 Módulos:
+${lineasModulos}
+
+⚖️ Peso total: ${r.pesoTotal.toLocaleString('es-PE')} kg`;
+
+  $('d_resumenTexto').textContent = texto;
+  $('d_resumenWa').classList.add('show');
+  copiadoReset($('d_copyBtn'), 'Copiar texto');
+  copiadoReset($('d_imgBtn'), 'Compartir imagen');
+  $('d_resumenWa').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+$('d_copyBtn').addEventListener('click', async ()=>{
+  const texto = $('d_resumenTexto').textContent;
+  const btn = $('d_copyBtn');
+  try{
+    await navigator.clipboard.writeText(texto);
+    copiadoOk(btn, 'Copiar texto');
+  }catch(e){
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = texto;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      copiadoOk(btn, 'Copiar texto');
+    }catch(e2){
+      showStatus('No se pudo copiar. Selecciona el texto manualmente.', 'error');
+    }
+  }
+});
+
+function copiadoOk(btn, textoOriginal){
+  btn.textContent = '¡Listo!';
+  btn.classList.add('copied');
+  setTimeout(()=>{ copiadoReset(btn, textoOriginal); }, 2000);
+}
+function copiadoReset(btn, textoOriginal){
+  btn.textContent = textoOriginal;
+  btn.classList.remove('copied');
+}
+
+/* ---------- Imagen del resumen (ticket), nítida y con varios módulos ---------- */
+function dibujarTicketDespacho(r){
+  const infoFilas = [
+    ['Fecha', formatFechaDisplay(r.fecha)],
+    ['Placa', r.placa],
+    ['Cliente', r.cliente],
+    ['Calidad', r.calidad],
+    ['Variedad', r.variedad]
+  ];
+  const modCols = ['MÓDULO', 'ENVASE', 'CANT.', 'PESO (KG)', 'F. COSECHA'];
+  const modWidths = [110, 120, 90, 150, 150];
+
+  const W = modWidths.reduce((a,b)=>a+b, 0);
+  const padX = 34;
+  const headerH = 118;
+  const infoRowH = 48;
+  const modHeaderH = 40;
+  const modRowH = 42;
+  const totalH = 52;
+  const footerH = 48;
+  const H = headerH + infoFilas.length*infoRowH + modHeaderH + r.modulos.length*modRowH + totalH + footerH;
+
+  const canvas = document.createElement('canvas');
+  const scale = 3; // alta nitidez para compresión de WhatsApp
+  canvas.width = W * scale;
+  canvas.height = H * scale;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.textBaseline = 'alphabetic';
+  ctx.imageSmoothingEnabled = true;
+  if('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
+
+  // Fondo
+  ctx.fillStyle = '#F8F4E8';
+  ctx.fillRect(0, 0, W, H);
+
+  // Cabecera
+  ctx.fillStyle = '#7A4B28';
+  ctx.fillRect(0, 0, W, headerH);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '700 28px "Work Sans", sans-serif';
+  ctx.fillText('🥑 DESPACHO DE PALTA', padX, 44);
+  ctx.font = '600 16px "Work Sans", sans-serif';
+  ctx.fillStyle = '#F3E7D6';
+  ctx.fillText(FUNDO_NOMBRE + '  ·  Viaje N° ' + r.viaje + '  ·  Placa ' + r.placa, padX, 72);
+  ctx.font = '600 15px "Work Sans", sans-serif';
+  ctx.fillStyle = '#EAD9C4';
+  ctx.fillText('Peso total: ' + r.pesoTotal.toLocaleString('es-PE') + ' kg', padX, 98);
+
+  // Filas de info
+  let y = headerH;
+  infoFilas.forEach((f, i)=>{
+    ctx.fillStyle = i % 2 === 0 ? '#F8F4E8' : '#F1EEE0';
+    ctx.fillRect(0, y, W, infoRowH);
+    ctx.strokeStyle = '#D9CFAF';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, y+infoRowH); ctx.lineTo(W, y+infoRowH); ctx.stroke();
+
+    ctx.fillStyle = '#3d3a2c';
+    ctx.font = '600 15px "Work Sans", sans-serif';
+    ctx.fillText(f[0], padX, y + infoRowH/2 + 5);
+
+    ctx.fillStyle = '#1c1b13';
+    ctx.font = '700 18px "Work Sans", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(String(f[1]), W - padX, y + infoRowH/2 + 6);
+    ctx.textAlign = 'left';
+    y += infoRowH;
+  });
+
+  // Encabezado tabla de módulos
+  ctx.fillStyle = '#3F5233';
+  ctx.fillRect(0, y, W, modHeaderH);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '700 13px "Work Sans", sans-serif';
+  let x = 0;
+  modCols.forEach((c, i)=>{
+    ctx.fillText(c, x + 16, y + modHeaderH/2 + 4);
+    x += modWidths[i];
+  });
+  y += modHeaderH;
+
+  // Filas de módulos
+  r.modulos.forEach((m, i)=>{
+    ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#F1EEE0';
+    ctx.fillRect(0, y, W, modRowH);
+    ctx.strokeStyle = '#D9CFAF';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, y+modRowH); ctx.lineTo(W, y+modRowH); ctx.stroke();
+
+    const vals = ['Mód. ' + m.modulo, m.envase==='jaba'?'Jaba':'Bin', String(m.cantidad), m.peso.toLocaleString('es-PE'), formatFechaDisplay(m.fechaCosecha)];
+    ctx.fillStyle = '#1c1b13';
+    ctx.font = '700 15px "Work Sans", sans-serif';
+    let xx = 0;
+    vals.forEach((v, ci)=>{
+      ctx.fillText(v, xx + 16, y + modRowH/2 + 5);
+      xx += modWidths[ci];
+    });
+    y += modRowH;
+  });
+
+  // Total
+  ctx.fillStyle = '#C6E0B4';
+  ctx.fillRect(0, y, W, totalH);
+  ctx.strokeStyle = '#8FAE72';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  ctx.fillStyle = '#1c1b13';
+  ctx.font = '700 19px "Work Sans", sans-serif';
+  ctx.fillText('PESO TOTAL', padX, y + totalH/2 + 6);
+  ctx.textAlign = 'right';
+  ctx.fillText(r.pesoTotal.toLocaleString('es-PE') + ' kg', W - padX, y + totalH/2 + 6);
+  ctx.textAlign = 'left';
+  y += totalH;
+
+  // Pie
+  ctx.fillStyle = '#2B2A1F';
+  ctx.fillRect(0, y, W, footerH);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '600 13.5px "Work Sans", sans-serif';
+  ctx.fillText('Registrado ' + new Date().toLocaleString('es-PE'), padX, y + footerH/2 + 5);
+
+  return canvas;
+}
+
+$('d_imgBtn').addEventListener('click', async ()=>{
+  if(!d_ultimoDespacho){ return; }
+  const btn = $('d_imgBtn');
+  const original = 'Compartir imagen';
+  btn.disabled = true; btn.textContent = 'Generando…';
+
+  try{
+    // Asegura que la fuente esté cargada antes de dibujar
+    if(document.fonts && document.fonts.ready){ await document.fonts.ready; }
+    const canvas = dibujarTicketDespacho(d_ultimoDespacho);
+
+    canvas.toBlob(async (blob)=>{
+      btn.disabled = false;
+      if(!blob){ showStatus('No se pudo generar la imagen.', 'error'); btn.textContent = original; return; }
+      const nombre = `despacho_viaje${d_ultimoDespacho.viaje}_${d_ultimoDespacho.fecha}.png`;
+      const file = new File([blob], nombre, {type:'image/png'});
+
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        try{
+          await navigator.share({files:[file], title:'Despacho de palta', text:'Resumen de despacho'});
+          copiadoOk(btn, original);
+          return;
+        }catch(shareErr){
+          // Si el usuario cancela el share, no mostramos error; solo restauramos el botón
+          btn.textContent = original;
+          return;
+        }
+      }
+
+      // Fallback: descargar la imagen
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = nombre; a.click();
+      URL.revokeObjectURL(url);
+      copiadoOk(btn, original);
+    }, 'image/png');
+  }catch(e){
+    btn.disabled = false; btn.textContent = original;
+    showStatus('Error al generar la imagen: ' + e.message, 'error');
+  }
+});
+
+async function eliminarDespacho(id){
+  despachos = despachos.filter(r=>r.id!==id);
+  await saveDespachos();
+  renderDespacho();
+  renderStock();
+}
+
+function poblarFiltrosDespacho(){
+  const fechas = [...new Set(despachos.map(r=>r.fecha))].sort().reverse();
+  const clientes = [...new Set(despachos.map(r=>r.cliente))].sort();
+  const variedades = [...new Set(despachos.map(r=>r.variedad))].sort();
+  const fF=$('d_filtroFecha'), fC=$('d_filtroCliente'), fV=$('d_filtroVariedad');
+  const curF=fF.value, curC=fC.value, curV=fV.value;
+  fF.innerHTML = '<option value="">Todas las fechas</option>'+fechas.map(f=>`<option value="${f}">${f}</option>`).join('');
+  fC.innerHTML = '<option value="">Todos los clientes</option>'+clientes.map(c=>`<option value="${c}">${c}</option>`).join('');
+  fV.innerHTML = '<option value="">Todas las variedades</option>'+variedades.map(v=>`<option value="${v}">${v}</option>`).join('');
+  fF.value=curF; fC.value=curC; fV.value=curV;
+}
+
+function renderTablaDespacho(){
+  const fF=$('d_filtroFecha').value, fC=$('d_filtroCliente').value, fV=$('d_filtroVariedad').value;
+  let filtrados = despachos.filter(r=> (!fF||r.fecha===fF) && (!fC||r.cliente===fC) && (!fV||r.variedad===fV));
+  filtrados.sort((a,b)=> b.fecha.localeCompare(a.fecha) || b.id.localeCompare(a.id));
+  const tbody = $('d_tablaBody');
+  tbody.innerHTML = '';
+  $('d_emptyState').style.display = filtrados.length===0 ? 'block':'none';
+  filtrados.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.fecha}</td><td>${r.viaje}</td><td>${r.placa||'—'}</td><td>${r.cliente}</td><td>${r.calidad}</td>
+      <td>${r.variedad}</td><td>Mod. ${r.modulo}</td><td>${r.envase==='jaba'?'Jaba':'Bin'}</td>
+      <td class="num">${r.cantidad}</td><td class="num">${r.peso.toLocaleString('es-PE')}</td>
+      <td>${r.fechaCosecha}</td>
+      <td><button class="del-btn" data-id="${r.id}">Eliminar</button></td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('.del-btn').forEach(b=> b.addEventListener('click', ()=>eliminarDespacho(b.dataset.id)));
+}
+
+function renderResumenDespacho(){
+  const hoy = todayISO();
+  const deHoy = despachos.filter(r=>r.fecha===hoy);
+  $('d_sumHoy').textContent = deHoy.reduce((s,r)=>s+r.peso,0).toLocaleString('es-PE')+' kg';
+  $('d_sumViajesHoy').textContent = new Set(deHoy.map(r=>r.viaje)).size;
+  $('d_sumTotal').textContent = despachos.reduce((s,r)=>s+r.peso,0).toLocaleString('es-PE')+' kg';
+}
+
+function renderDespacho(){
+  poblarFiltrosDespacho();
+  renderTablaDespacho();
+  renderResumenDespacho();
+}
+
+['d_filtroFecha','d_filtroCliente','d_filtroVariedad'].forEach(id=> $(id).addEventListener('change', renderTablaDespacho));
+
+$('d_exportBtn').addEventListener('click', ()=>{
+  if(despachos.length===0){ showStatus('No hay despachos para exportar.','error'); return; }
+  const header = 'Fecha,Viaje,Placa,Cliente,Calidad,Variedad,Modulo,Envase,Cantidad,Peso(kg),FechaCosecha\n';
+  const rows = [...despachos].sort((a,b)=>a.fecha.localeCompare(b.fecha))
+    .map(r=>`${r.fecha},${r.viaje},"${r.placa||''}","${r.cliente}","${r.calidad}","${r.variedad}",${r.modulo},${r.envase},${r.cantidad},${r.peso},${r.fechaCosecha}`).join('\n');
+  descargarCSV(header+rows, 'despachos_beggie.csv');
+});
+
+function descargarCSV(contenido, nombre){
+  const blob = new Blob([contenido], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nombre; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* =========================================================
+   STOCK (cosecha acumulada − despacho, por variedad)
+   ========================================================= */
+function calcularStockPorVariedad(){
+  const mapa = {};
+  cosechas.forEach(r=>{
+    if(!mapa[r.variedad]) mapa[r.variedad] = {variedad:r.variedad, cosechado:0, despachado:0};
+    mapa[r.variedad].cosechado += r.peso;
+  });
+  despachos.forEach(r=>{
+    if(!mapa[r.variedad]) mapa[r.variedad] = {variedad:r.variedad, cosechado:0, despachado:0};
+    mapa[r.variedad].despachado += r.peso;
+  });
+  return Object.values(mapa)
+    .map(v=>({...v, stock: v.cosechado - v.despachado}))
+    .sort((a,b)=> a.variedad.localeCompare(b.variedad));
+}
+
+function construirMovimientos(){
+  const movs = [];
+  cosechas.forEach(r=>{
+    movs.push({
+      fecha:r.fecha, tipo:'Cosecha', variedad:r.variedad,
+      detalle:'Mod. ' + r.modulo + ' · ' + (r.envase==='jaba'?'Jaba':'Bin') + ' x' + r.cantidad,
+      valor: r.peso, orden:0
+    });
+  });
+  despachos.forEach(r=>{
+    movs.push({
+      fecha:r.fecha, tipo:'Despacho', variedad:r.variedad,
+      detalle:r.cliente + ' · viaje ' + r.viaje + ' (cosecha ' + r.fechaCosecha + ')',
+      valor: -r.peso, orden:1
+    });
+  });
+  movs.sort((a,b)=> a.fecha.localeCompare(b.fecha) || a.orden - b.orden);
+  return movs;
+}
+
+function poblarFiltrosStock(){
+  const movs = construirMovimientos();
+  const variedades = [...new Set(movs.map(m=>m.variedad))].sort();
+  const fechas = [...new Set(movs.map(m=>m.fecha))].sort().reverse();
+
+  const fV = $('s_filtroVariedad'), fF = $('s_filtroFecha');
+  const curV = fV.value, curF = fF.value;
+  fV.innerHTML = '<option value="">Todas las variedades</option>' + variedades.map(v=>`<option value="${v}">${v}</option>`).join('');
+  fF.innerHTML = '<option value="">Todas las fechas</option>' + fechas.map(f=>`<option value="${f}">${f}</option>`).join('');
+  fV.value = curV; fF.value = curF;
+}
+
+function renderStockResumen(){
+  const filas = calcularStockPorVariedad();
+  const tbody = $('s_resumenBody');
+  tbody.innerHTML = '';
+  $('s_emptyResumen').style.display = filas.length === 0 ? 'block' : 'none';
+
+  let totCosechado = 0, totDespachado = 0, totStock = 0;
+  filas.forEach(f=>{
+    totCosechado += f.cosechado; totDespachado += f.despachado; totStock += f.stock;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${f.variedad}</td>
+      <td class="num col-ingreso">${f.cosechado.toLocaleString('es-PE')}</td>
+      <td class="num col-despacho">${f.despachado.toLocaleString('es-PE')}</td>
+      <td class="num ${f.stock < 0 ? 'negativo':'positivo'}">${f.stock.toLocaleString('es-PE')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  $('s_totCosechado').textContent = totCosechado.toLocaleString('es-PE');
+  $('s_totDespachado').textContent = totDespachado.toLocaleString('es-PE');
+  $('s_totStock').textContent = totStock.toLocaleString('es-PE');
+
+  $('s_sumCosechado').textContent = totCosechado.toLocaleString('es-PE') + ' kg';
+  $('s_sumDespachado').textContent = totDespachado.toLocaleString('es-PE') + ' kg';
+  $('s_sumStock').textContent = totStock.toLocaleString('es-PE') + ' kg';
+}
+
+function renderStockLedger(){
+  const fV = $('s_filtroVariedad').value;
+  const fF = $('s_filtroFecha').value;
+  const movs = construirMovimientos();
+
+  const relevantes = fV ? movs.filter(m=>m.variedad===fV) : movs;
+
+  let saldo = 0;
+  const conSaldo = relevantes.map(m=>{
+    saldo += m.valor;
+    return {...m, saldo};
+  });
+
+  const visibles = fF ? conSaldo.filter(m=>m.fecha===fF) : conSaldo;
+
+  const tbody = $('s_ledgerBody');
+  tbody.innerHTML = '';
+  $('s_emptyLedger').style.display = visibles.length === 0 ? 'block' : 'none';
+
+  visibles.forEach(m=>{
+    const tr = document.createElement('tr');
+    const signo = m.valor >= 0 ? '+' : '';
+    tr.innerHTML = `
+      <td>${m.fecha}</td>
+      <td><span class="tipo-badge ${m.tipo==='Cosecha'?'cosecha':'despacho'}">${m.tipo==='Cosecha'?'🟢 Cosecha':'🟤 Despacho'}</span></td>
+      <td>${m.variedad}</td>
+      <td>${m.detalle}</td>
+      <td class="num ${m.valor < 0 ? 'negativo':'positivo'}">${signo}${m.valor.toLocaleString('es-PE')}</td>
+      <td class="num">${m.saldo.toLocaleString('es-PE')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderStock(){
+  poblarFiltrosStock();
+  renderStockResumen();
+  renderStockLedger();
+  updateDespachoPreview();
+  renderPreviewStock();
+}
+
+['s_filtroVariedad','s_filtroFecha'].forEach(id=> $(id).addEventListener('change', renderStockLedger));
+
+$('s_exportBtn').addEventListener('click', ()=>{
+  const fV = $('s_filtroVariedad').value;
+  const movs = construirMovimientos();
+  const relevantes = fV ? movs.filter(m=>m.variedad===fV) : movs;
+  if(relevantes.length===0){ showStatus('No hay movimientos para exportar.','error'); return; }
+
+  let saldo = 0;
+  const header = 'Fecha,Tipo,Variedad,Detalle,Movimiento(kg),Saldo(kg)\n';
+  const rows = relevantes.map(m=>{
+    saldo += m.valor;
+    return `${m.fecha},${m.tipo},"${m.variedad}","${m.detalle}",${m.valor},${saldo}`;
+  }).join('\n');
+  descargarCSV(header+rows, 'stock_beggie.csv');
+});
+
+/* =========================================================
+   IMAGEN DE STOCK POR VARIEDAD (para compartir por WhatsApp)
+   ========================================================= */
+function abrirSelectorVariedadStock(){
+  const variedades = [...new Set(cosechas.map(r=>r.variedad))].sort();
+  if(variedades.length===0){
+    showStatus('No hay cosechas registradas para generar el reporte.', 'error');
+    return;
+  }
+  const cont = $('s_modalOpciones');
+  cont.innerHTML = '';
+  variedades.forEach(v=>{
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'stock-modal-btn';
+    b.textContent = v;
+    b.addEventListener('click', ()=>{
+      cerrarSelectorVariedadStock();
+      generarYCompartirImagenStock(v);
+    });
+    cont.appendChild(b);
+  });
+  $('s_modalOverlay').classList.add('show');
+}
+function cerrarSelectorVariedadStock(){
+  $('s_modalOverlay').classList.remove('show');
+}
+$('s_imgStockBtn').addEventListener('click', abrirSelectorVariedadStock);
+$('s_modalCancelar').addEventListener('click', cerrarSelectorVariedadStock);
+$('s_modalOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 's_modalOverlay') cerrarSelectorVariedadStock();
+});
+
+function dibujarTicketStock(variedad, filas, totalTn){
+  const cols = ['FECHA','FUNDO','VARIEDAD','MÓDULO','TN DISP.','ACOPIO'];
+  const colWidths = [98, 118, 128, 84, 68, 164];
+  const W = colWidths.reduce((a,b)=>a+b, 0);
+  const headerH = 70;
+  const colHeaderH = 40;
+  const rowH = 38;
+  const totalH = 44;
+  const H = headerH + colHeaderH + filas.length*rowH + totalH;
+
+  const canvas = document.createElement('canvas');
+  const scale = 3; // alta nitidez para compresión de WhatsApp
+  canvas.width = W*scale; canvas.height = H*scale;
+  canvas.style.width = W+'px'; canvas.style.height = H+'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.imageSmoothingEnabled = true;
+  if('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
+
+  // Fondo general
+  ctx.fillStyle = '#F8F4E8';
+  ctx.fillRect(0, 0, W, H);
+
+  // Título
+  ctx.fillStyle = '#0F2B46';
+  ctx.fillRect(0, 0, W, headerH);
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.font = '700 20px "Fraunces", serif';
+  ctx.fillText('STOCK DISPONIBLE DE ' + variedad, W/2, headerH/2 + 2, W - 24);
+  ctx.font = '600 13px "Work Sans", sans-serif';
+  ctx.fillStyle = '#D9E2EC';
+  ctx.fillText(FUNDO_NOMBRE, W/2, headerH/2 + 22);
+
+  // Encabezado de columnas
+  let x = 0;
+  const headerY = headerH;
+  ctx.fillStyle = '#1F3864';
+  ctx.fillRect(0, headerY, W, colHeaderH);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '700 13px "Work Sans", sans-serif';
+  cols.forEach((c, i)=>{
+    ctx.fillText(c, x + colWidths[i]/2, headerY + colHeaderH/2 + 4, colWidths[i] - 6);
+    x += colWidths[i];
+  });
+
+  // Filas de datos
+  let y = headerY + colHeaderH;
+  filas.forEach((r, i)=>{
+    ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#F1EEE0';
+    ctx.fillRect(0, y, W, rowH);
+    ctx.strokeStyle = '#D9CFAF';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, y + rowH); ctx.lineTo(W, y + rowH);
+    ctx.stroke();
+
+    const vals = [
+      formatFechaDisplay(r.fecha),
+      FUNDO_NOMBRE,
+      r.variedad,
+      'M' + r.modulo,
+      (r.stockKg/1000).toFixed(1),
+      r.acopio || '—'
+    ];
+    ctx.fillStyle = '#1c1b13';
+    ctx.font = '700 13px "Work Sans", sans-serif';
+    let xx = 0;
+    vals.forEach((v, ci)=>{
+      ctx.fillText(String(v), xx + colWidths[ci]/2, y + rowH/2 + 4, colWidths[ci] - 6);
+      xx += colWidths[ci];
+    });
+    y += rowH;
+  });
+
+  // Fila de total
+  ctx.fillStyle = '#C6E0B4';
+  ctx.fillRect(0, y, W, totalH);
+  ctx.strokeStyle = '#8FAE72';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+
+  const labelSpan = colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3];
+  ctx.fillStyle = '#1c1b13';
+  ctx.font = '700 15px "Work Sans", sans-serif';
+  ctx.fillText('TOTAL TN', labelSpan/2, y + totalH/2 + 5);
+  ctx.fillText(totalTn.toFixed(1), labelSpan + colWidths[4]/2, y + totalH/2 + 5);
+
+  ctx.textAlign = 'left';
+  return canvas;
+}
+
+/* Agrupa cosecha − despacho por MÓDULO + FECHA DE COSECHA, para reflejar
+   el stock real que queda disponible (descontando lo ya despachado de ese
+   mismo módulo/fecha) en lugar del acumulado bruto de cosecha. */
+function calcularStockDetalladoPorVariedad(variedad){
+  const mapa = {};
+  cosechas.filter(r=>r.variedad===variedad).forEach(r=>{
+    const key = r.modulo + '|' + r.fecha;
+    if(!mapa[key]) mapa[key] = {modulo:r.modulo, fecha:r.fecha, cosechado:0, despachado:0, acopios:new Set()};
+    mapa[key].cosechado += r.peso;
+    if(r.acopio) mapa[key].acopios.add(r.acopio);
+  });
+  despachos.filter(r=>r.variedad===variedad).forEach(r=>{
+    const key = r.modulo + '|' + r.fechaCosecha;
+    if(!mapa[key]) mapa[key] = {modulo:r.modulo, fecha:r.fechaCosecha, cosechado:0, despachado:0, acopios:new Set()};
+    mapa[key].despachado += r.peso;
+  });
+  return Object.values(mapa)
+    .map(g=>({
+      modulo:g.modulo, fecha:g.fecha, variedad,
+      acopio:[...g.acopios].join(' / '),
+      stockKg: g.cosechado - g.despachado
+    }))
+    .sort((a,b)=> a.fecha.localeCompare(b.fecha) || a.modulo - b.modulo);
+}
+
+/* ---------- Vista previa en vivo (no requiere presionar el botón de compartir) ---------- */
+function poblarSelectPreviewStock(){
+  const sel = $('s_previewVariedad');
+  const variedades = [...new Set(cosechas.map(r=>r.variedad))].sort();
+  const seleccionPrevia = sel.value;
+  sel.innerHTML = '';
+  if(variedades.length===0){
+    sel.innerHTML = '<option value="">Sin variedades registradas</option>';
+    return;
+  }
+  variedades.forEach(v=>{
+    const opt = document.createElement('option');
+    opt.value = v; opt.textContent = v;
+    sel.appendChild(opt);
+  });
+  if(variedades.includes(seleccionPrevia)) sel.value = seleccionPrevia;
+}
+
+async function renderPreviewStock(){
+  poblarSelectPreviewStock();
+  const holder = $('s_previewCanvasHolder');
+  const totalEl = $('s_previewTotal');
+  const sel = $('s_previewVariedad');
+  const variedad = sel.value;
+
+  holder.innerHTML = '';
+  totalEl.textContent = '';
+
+  if(!variedad){
+    holder.innerHTML = '<div class="empty-state">Aún no hay cosechas registradas para mostrar el stock.</div>';
+    return;
+  }
+
+  const filas = calcularStockDetalladoPorVariedad(variedad).filter(r=>r.stockKg > 0);
+  if(filas.length===0){
+    holder.innerHTML = '<div class="empty-state">No hay stock disponible de ' + variedad + ' (todo fue despachado o no hay cosechas).</div>';
+    return;
+  }
+
+  const totalTn = filas.reduce((s,r)=> s + r.stockKg/1000, 0);
+  if(document.fonts && document.fonts.ready){ await document.fonts.ready; }
+  const canvas = dibujarTicketStock(variedad, filas, totalTn);
+  canvas.classList.add('stock-preview-canvas');
+  holder.appendChild(canvas);
+  totalEl.textContent = 'TOTAL STOCK DISPONIBLE: ' + totalTn.toFixed(1) + ' TN';
+}
+
+$('s_previewVariedad').addEventListener('change', renderPreviewStock);
+
+async function generarYCompartirImagenStock(variedad){
+  const filas = calcularStockDetalladoPorVariedad(variedad).filter(r=>r.stockKg > 0);
+  if(filas.length===0){
+    showStatus('No hay stock disponible de esa variedad (todo fue despachado o no hay cosechas).', 'error');
+    return;
+  }
+  const totalTn = filas.reduce((s,r)=> s + r.stockKg/1000, 0);
+
+  const btn = $('s_imgStockBtn');
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Generando…';
+
+  try{
+    if(document.fonts && document.fonts.ready){ await document.fonts.ready; }
+    const canvas = dibujarTicketStock(variedad, filas, totalTn);
+
+    canvas.toBlob(async (blob)=>{
+      btn.disabled = false; btn.textContent = original;
+      if(!blob){ showStatus('No se pudo generar la imagen.', 'error'); return; }
+      const nombreArchivo = `stock_${variedad.replace(/\s+/g,'_')}_${todayISO()}.png`;
+      const file = new File([blob], nombreArchivo, {type:'image/png'});
+
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        try{
+          await navigator.share({files:[file], title:'Stock de ' + variedad, text:'Acumulado de ' + variedad});
+          return;
+        }catch(shareErr){
+          return; // usuario canceló el share
+        }
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = nombreArchivo; a.click();
+      URL.revokeObjectURL(url);
+    }, 'image/png');
+  }catch(e){
+    btn.disabled = false; btn.textContent = original;
+    showStatus('Error al generar la imagen: ' + e.message, 'error');
+  }
+}
+
+/* ---------- Init ---------- */
+$('c_fecha').value = todayISO();
+$('d_fecha').value = todayISO();
+updateCosechaPreview();
+updateDespachoPreview();
+Promise.all([loadCosechas(), loadDespachos()]).then(renderStock);
+</script>
+</body>
+</html>
